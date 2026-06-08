@@ -60,7 +60,7 @@ eureka:
 
 gateway:
   auth:
-    validate-url: lb://auth-service/api/auth/validate
+    validate-url: lb://auth-service/auth/validate
     public-paths:
       - /api/auth/
 

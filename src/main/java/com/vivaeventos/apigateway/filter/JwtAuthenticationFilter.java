@@ -68,9 +68,11 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
                 // Criterio 2: si auth-service retorna 4xx/5xx → onErrorResume maneja el 401
                 .bodyToMono(ValidateResponse.class)
                 .flatMap(validateResponse -> {
-                    // Criterio 3: JWT válido → inyectar email y rol en headers
+                    // Criterio 3: JWT válido → limpiar headers entrantes y reemplazar con los validados
                     ServerWebExchange mutatedExchange = exchange.mutate()
                             .request(exchange.getRequest().mutate()
+                                    .headers(h -> h.remove("X-User-Email"))
+                                    .headers(h -> h.remove("X-User-Role"))
                                     .header("X-User-Email", validateResponse.email())
                                     .header("X-User-Role", validateResponse.role())
                                     .build())
