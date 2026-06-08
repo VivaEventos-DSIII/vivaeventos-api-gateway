@@ -8,6 +8,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -17,7 +18,7 @@ import reactor.core.publisher.Mono;
  * Flujo:
  * 1. Si la ruta es pública (/api/auth/**) → deja pasar sin validar
  * 2. Si no hay JWT o no empieza con "Bearer " → retorna 401
- * 3. Llama a auth-service /auth/validate con el JWT
+ * 3. Llama a auth-service /api/auth/validate con el JWT
  * 4. Si auth-service retorna error → retorna 401
  * 5. Si auth-service retorna 200 → extrae email y rol,
  *    los inyecta en headers X-User-Email y X-User-Role,
@@ -77,8 +78,13 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
                     return chain.filter(mutatedExchange);
                 })
                 .onErrorResume(ex -> {
-                    // Criterio 2: token inválido/expirado → 401
-                    exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                    // Criterio 2: auth-service rechaza el token → 401
+                    // Fallo de conexión (auth-service caído) → 503
+                    if (ex instanceof WebClientResponseException) {
+                        exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+                    } else {
+                        exchange.getResponse().setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
+                    }
                     return exchange.getResponse().setComplete();
                 });
     }
