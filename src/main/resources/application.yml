@@ -60,9 +60,7 @@ eureka:
 
 gateway:
   auth:
-    # Llama directamente al auth-service por hostname Docker/K8s.
-    # El path interno del servicio es /auth/validate (sin prefijo /api/).
-    validate-url: http://auth-service/auth/validate
+    validate-url: lb://auth-service/api/auth/validate
     public-paths:
       - /api/auth/
 
