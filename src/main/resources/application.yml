@@ -63,6 +63,7 @@ gateway:
     validate-url: lb://auth-service/auth/validate
     public-paths:
       - /api/auth/
+      - /api/events/catalog
 
 management:
   endpoints:
